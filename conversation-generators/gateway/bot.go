@@ -14,7 +14,12 @@ import (
 	"github.com/eazyautodelete/ai-users/ai"
 )
 
-func Bot(prevMessages *[]ai.Message) {
+type Channel interface {
+	GetID() string
+	AddMessage(message ai.Message)
+}
+
+func Bot(channels []Channel) {
 	client, err := disgo.New(
 		config.EnvMustGet("DISCORD_TOKEN_4"),
 		bot.WithGatewayConfigOpts(
@@ -48,10 +53,17 @@ func Bot(prevMessages *[]ai.Message) {
 					name = e.Message.Author.EffectiveName()
 				}
 
-				*prevMessages = append(*prevMessages, ai.Message{
-					Role:    "user",
-					Content: name + ": " + e.Message.Content[4:],
-				})
+				// Find the channel this message belongs to and add to its history
+				channelID := e.Message.ChannelID.String()
+				for _, channel := range channels {
+					if channel.GetID() == channelID {
+						channel.AddMessage(ai.Message{
+							Role:    "user",
+							Content: name + ": " + e.Message.Content[4:],
+						})
+						break
+					}
+				}
 			}
 		}),
 	)

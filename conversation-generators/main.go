@@ -39,19 +39,31 @@ Generate exactly one message from that character:
 </task>
 `
 
-var previousMessages = []ai.Message{}
+type Channel struct {
+	ID                string
+	PreviousMessages  []ai.Message
+	LastUser          string
+	MessageSinceTopic int
+}
+
+func (c *Channel) GetID() string {
+	return c.ID
+}
+
+func (c *Channel) AddMessage(message ai.Message) {
+	c.PreviousMessages = append(c.PreviousMessages, message)
+	if len(c.PreviousMessages) > maxPrevMsgs {
+		c.PreviousMessages = c.PreviousMessages[1:]
+	}
+}
 
 var (
-	names    = []string{"Zora", "Kip", "Luma", "Dex", "Nova"}
-	lastUser = ""
+	names      = []string{"Zora", "Kip", "Luma", "Dex", "Nova"}
+	channels   []*Channel
+	maxPrevMsgs = 3
 )
 
 var logger = logrus.New()
-
-var (
-	maxPrevMsgs       = 3
-	messageSinceTopic = 0
-)
 
 func main() {
 	hostname, err := os.Hostname()
@@ -69,13 +81,38 @@ func main() {
 
 	ai.CreateClient()
 
-	go StartTicker()
+	// Initialize 10 channels
+	for i := 0; i < 10; i++ {
+		channelID := config.EnvGet(fmt.Sprintf("CHANNEL_ID_%d", i), "")
+		if channelID == "" {
+			logger.Warnf("CHANNEL_ID_%d not configured, skipping channel %d", i, i)
+			continue
+		}
+		
+		channel := &Channel{
+			ID:                channelID,
+			PreviousMessages:  []ai.Message{},
+			LastUser:          "",
+			MessageSinceTopic: 0,
+		}
+		channels = append(channels, channel)
+		
+		// Start a ticker for each channel
+		go StartTicker(channel)
+	}
 
-	gateway.Bot(&previousMessages)
+	// Convert channels to interface slice for gateway
+	channelInterfaces := make([]gateway.Channel, len(channels))
+	for i, ch := range channels {
+		channelInterfaces[i] = ch
+	}
+
+	// Start the gateway bot, passing all channels for staff message handling
+	gateway.Bot(channelInterfaces)
 }
 
-func GenerateMessage() {
-	nextUser := GetNextUser()
+func GenerateMessage(channel *Channel) {
+	nextUser := GetNextUser(channel)
 
 	indexOfNextUser := -1
 	for i, name := range names {
@@ -92,8 +129,8 @@ func GenerateMessage() {
 		},
 	}
 
-	if len(previousMessages) > 0 {
-		for _, message := range previousMessages {
+	if len(channel.PreviousMessages) > 0 {
+		for _, message := range channel.PreviousMessages {
 			messages = append(messages, ai.Message{
 				Role:    "user",
 				Content: message.Content,
@@ -107,12 +144,12 @@ func GenerateMessage() {
 				"Don't include the name writing the message or quotation marks - just provide the content.",
 		})
 
-		if messageSinceTopic > 5 {
+		if channel.MessageSinceTopic > 5 {
 			messages = append(messages, ai.Message{
 				Role:    "user",
 				Content: "Transition to a new real world topic. Keep the message below 64 characters. Don't mention the name of the character saying it - just the content itself.",
 			})
-			messageSinceTopic = 0
+			channel.MessageSinceTopic = 0
 		}
 	} else {
 		messages = append(messages, ai.Message{
@@ -123,14 +160,14 @@ func GenerateMessage() {
 
 	res := ai.GenerateWithGoogle(context.Background(), messages)
 
-	lastUser = nextUser
+	channel.LastUser = nextUser
 
-	previousMessages = append(previousMessages, ai.Message{
+	channel.PreviousMessages = append(channel.PreviousMessages, ai.Message{
 		Role:    "user",
 		Content: nextUser + ": " + res,
 	})
-	if len(previousMessages) > maxPrevMsgs {
-		previousMessages = previousMessages[1:]
+	if len(channel.PreviousMessages) > maxPrevMsgs {
+		channel.PreviousMessages = channel.PreviousMessages[1:]
 	}
 
 	message := discord.MessageCreate{
@@ -146,21 +183,21 @@ func GenerateMessage() {
 	headers := api.JSONHeader()
 	headers.Add("Authorization", "Bot "+token)
 
-	url := fmt.Sprintf("/api/v10/channels/%v/messages", config.EnvGet("CHANNEL_ID", ""))
+	url := fmt.Sprintf("/api/v10/channels/%v/messages", channel.ID)
 	apiRes := api.RunRequest("POST", url, message, headers, nil)
 
 	if !apiRes.Success {
-		logger.Errorf("Failed to send message as %s: %v", nextUser, apiRes.Error)
+		logger.Errorf("Failed to send message as %s in channel %s: %v", nextUser, channel.ID, apiRes.Error)
 		return
 	}
 
-	messageSinceTopic++
+	channel.MessageSinceTopic++
 }
 
-func GetNextUser() string {
+func GetNextUser(channel *Channel) string {
 	var choices []string
 	for _, name := range names {
-		if name != lastUser {
+		if name != channel.LastUser {
 			choices = append(choices, name)
 		}
 	}
@@ -175,9 +212,9 @@ func GetNextUser() string {
 	return randomName
 }
 
-func StartTicker() {
+func StartTicker(channel *Channel) {
 	for {
-		GenerateMessage()
+		GenerateMessage(channel)
 
 		now := time.Now().UTC()
 		var waitDuration time.Duration
