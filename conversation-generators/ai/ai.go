@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/EazyAutodelete/bot/lib/config"
+	"github.com/EazyAutodelete/bot/lib/logger"
 	"google.golang.org/genai"
 )
 
@@ -49,7 +49,7 @@ func GenerateWithGoogle(ctx context.Context, messages []Message) string {
 
 	resp, err := client.Models.GenerateContent(ctx, "gemini-2.5-flash-lite", contents, config)
 	if err != nil {
-		fmt.Println("Error generating content:", err)
+		logger.GetLogger().Error("Error generating content with Google Gemini: %v", err)
 		return loremIpsum.Sentence()
 	}
 
@@ -78,13 +78,13 @@ func GenerateWithOllama(ctx context.Context, messages []Message) string {
 	client := &http.Client{}
 	reqBody, err := json.Marshal(payload)
 	if err != nil {
-		fmt.Println(err)
+		logger.GetLogger().Error("Error marshaling request payload: %v", err)
 		return ""
 	}
 
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(reqBody))
 	if err != nil {
-		fmt.Println(err)
+		logger.GetLogger().Error("Error creating HTTP request: %v", err)
 		return ""
 	}
 
@@ -92,26 +92,26 @@ func GenerateWithOllama(ctx context.Context, messages []Message) string {
 
 	res, err := client.Do(req)
 	if err != nil {
-		fmt.Println(err)
+		logger.GetLogger().Error("Error making HTTP request: %v", err)
 		return ""
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		fmt.Println("HTTP error:", res.Status)
+		logger.GetLogger().Error("HTTP error: %s", res.Status)
 		return ""
 	}
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		fmt.Println(err)
+		logger.GetLogger().Error("Error reading HTTP response body: %v", err)
 		return ""
 	}
 
 	var resp APIResponse
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
-		fmt.Println(err)
+		logger.GetLogger().Error("Error unmarshaling JSON response: %v", err)
 		return ""
 	}
 

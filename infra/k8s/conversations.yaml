@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: conversation-generators
+  namespace: ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: conversation-generators
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: conversation-generators
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+      containers:
+        - image: ghcr.io/eazyautodelete/conversation-generators:1.0.4
+          name: conversation-generators
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: "20m"
+              memory: "64Mi"
+            limits:
+              cpu: "500m"
+              memory: "128Mi"
+          env:
+            - name: GOMEMLIMIT
+              value: 128MiB
+            - name: STAFF_ROLE
+              value: "697150699489722418"
+            - name: REST_PROXY_ADDRESS
+              value: "nirn-proxy.nirn-proxy.svc.cluster.local:8080"
+            - name: CHANNEL_ID_0
+              value: "1091690641634902076"
+            - name: CHANNEL_ID_1
+              value: "1353010308309848146"
+            - name: CHANNEL_ID_2
+              value: "1091691995564626013"
+            - name: CHANNEL_ID_3
+              value: "1353465316809769090"
+            - name: CHANNEL_ID_4
+              value: "1353515863998726144"
+            - name: CHANNEL_ID_5
+              value: "1353148008404877312"
+            - name: CHANNEL_ID_6
+              value: "1353142972518105088"
+            - name: CHANNEL_ID_7
+              value: "1353149460716323017"
+            - name: CHANNEL_ID_8
+              value: "1353460558640451666"
+            - name: CHANNEL_ID_9
+              value: "1188860172110676078"
+            - name: AI_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: conversation-generators-secrets
+                  key: AI_TOKEN
+            - name: DISCORD_TOKEN_0
+              valueFrom:
+                secretKeyRef:
+                  name: conversation-generators-secrets
+                  key: DISCORD_TOKEN_0
+            - name: DISCORD_TOKEN_1
+              valueFrom:
+                secretKeyRef:
+                  name: conversation-generators-secrets
+                  key: DISCORD_TOKEN_1
+            - name: DISCORD_TOKEN_2
+              valueFrom:
+                secretKeyRef:
+                  name: conversation-generators-secrets
+                  key: DISCORD_TOKEN_2
+            - name: DISCORD_TOKEN_3
+              valueFrom:
+                secretKeyRef:
+                  name: conversation-generators-secrets
+                  key: DISCORD_TOKEN_3
+            - name: DISCORD_TOKEN_4
+              valueFrom:
+                secretKeyRef:
+                  name: conversation-generators-secrets
+                  key: DISCORD_TOKEN_4

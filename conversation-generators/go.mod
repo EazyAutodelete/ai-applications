@@ -7,7 +7,6 @@ replace github.com/EazyAutodelete/bot/lib => ../../bot/lib
 require (
 	github.com/EazyAutodelete/bot/lib v0.0.0-00010101000000-000000000000
 	github.com/disgoorg/disgo v0.19.0-rc.12
-	github.com/sirupsen/logrus v1.9.3
 	google.golang.org/genai v1.36.0
 	gopkg.in/loremipsum.v1 v1.1.2
 )

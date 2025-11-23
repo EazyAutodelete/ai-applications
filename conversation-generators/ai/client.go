@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/EazyAutodelete/bot/lib/config"
+	"github.com/EazyAutodelete/bot/lib/logger"
 	"google.golang.org/genai"
 	"gopkg.in/loremipsum.v1"
 )
@@ -22,6 +23,7 @@ func CreateClient() {
 		APIKey: config.EnvGet("AI_TOKEN", ""),
 	})
 	if err != nil {
+		logger.GetLogger().Fatal("Error creating AI client: %v", err)
 		panic(err)
 	}
 
