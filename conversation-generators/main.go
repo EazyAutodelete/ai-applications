@@ -162,13 +162,10 @@ func GenerateMessage(channel *Channel) {
 
 	channel.LastUser = nextUser
 
-	channel.PreviousMessages = append(channel.PreviousMessages, ai.Message{
+	channel.AddMessage(ai.Message{
 		Role:    "user",
 		Content: nextUser + ": " + res,
 	})
-	if len(channel.PreviousMessages) > maxPrevMsgs {
-		channel.PreviousMessages = channel.PreviousMessages[1:]
-	}
 
 	message := discord.MessageCreate{
 		Content: res + "\n-# This is AI content. Only messages by staff members are read.",
