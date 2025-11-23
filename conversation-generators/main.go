@@ -58,8 +58,8 @@ func (c *Channel) AddMessage(message ai.Message) {
 }
 
 var (
-	names      = []string{"Zora", "Kip", "Luma", "Dex", "Nova"}
-	channels   []*Channel
+	names       = []string{"Zora", "Kip", "Luma", "Dex", "Nova"}
+	channels    []*Channel
 	maxPrevMsgs = 3
 )
 
@@ -88,7 +88,7 @@ func main() {
 			logger.Warnf("CHANNEL_ID_%d not configured, skipping channel %d", i, i)
 			continue
 		}
-		
+
 		channel := &Channel{
 			ID:                channelID,
 			PreviousMessages:  []ai.Message{},
@@ -96,7 +96,7 @@ func main() {
 			MessageSinceTopic: 0,
 		}
 		channels = append(channels, channel)
-		
+
 		// Start a ticker for each channel
 		go StartTicker(channel)
 	}
