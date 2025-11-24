@@ -222,14 +222,14 @@ func StartTicker(channel *Channel) {
 		var waitDuration time.Duration
 
 		if now.Hour() >= 15 && now.Hour() <= 22 {
-			min := 2
-			max := 5
+			min := 5
+			max := 11
 
 			waitMinutes := rand.Intn(max-min+1) + min
 			waitDuration = time.Duration(waitMinutes) * time.Minute
 		} else {
-			min := 10
-			max := 35
+			min := 15
+			max := 45
 
 			waitMinutes := rand.Intn(max-min+1) + min
 			waitDuration = time.Duration(waitMinutes) * time.Minute

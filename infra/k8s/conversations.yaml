@@ -21,7 +21,7 @@ spec:
       imagePullSecrets:
         - name: ghcr-secret
       containers:
-        - image: ghcr.io/eazyautodelete/conversation-generators:1.0.4
+        - image: ghcr.io/eazyautodelete/conversation-generators:1.0.5
           name: conversation-generators
           imagePullPolicy: IfNotPresent
           resources:
