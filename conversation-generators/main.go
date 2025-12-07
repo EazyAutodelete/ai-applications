@@ -82,7 +82,7 @@ func main() {
 	ai.CreateClient()
 
 	// Initialize 10 channels
-	for i := range 10 {
+	for i := range config.EnvGetInt("CHANNEL_COUNT", 10) {
 		channelID := config.EnvGet(fmt.Sprintf("CHANNEL_ID_%d", i), "")
 		if channelID == "" {
 			logger.Warn("CHANNEL_ID_%d not configured, skipping channel %d", i, i)
@@ -216,25 +216,28 @@ func GetNextUser(channel *Channel) string {
 
 func StartTicker(channel *Channel) {
 	for {
-		GenerateMessage(channel)
 
 		now := time.Now().UTC()
 		var waitDuration time.Duration
 
 		if now.Hour() >= 15 && now.Hour() <= 22 {
-			min := 5
-			max := 11
+			min := config.EnvGetInt("MAIN_MIN", 60)
+			max := config.EnvGetInt("MAIN_MAX", 300)
 
-			waitMinutes := rand.Intn(max-min+1) + min
-			waitDuration = time.Duration(waitMinutes) * time.Minute
+			waitSeconds := rand.Intn(max-min+1) + min
+			waitDuration = time.Duration(waitSeconds) * time.Second
 		} else {
-			min := 15
-			max := 45
+			min := config.EnvGetInt("OFFPEAK_MIN", 180)
+			max := config.EnvGetInt("OFFPEAK_MAX", 600)
 
-			waitMinutes := rand.Intn(max-min+1) + min
-			waitDuration = time.Duration(waitMinutes) * time.Minute
+			waitSeconds := rand.Intn(max-min+1) + min
+			waitDuration = time.Duration(waitSeconds) * time.Second
 		}
 
+		logger.GetLogger().
+			Info("Waiting %v before generating next message for channel %s", waitDuration, channel.ID)
 		time.Sleep(waitDuration)
+
+		GenerateMessage(channel)
 	}
 }

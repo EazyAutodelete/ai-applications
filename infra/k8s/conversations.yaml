@@ -21,7 +21,7 @@ spec:
       imagePullSecrets:
         - name: ghcr-secret
       containers:
-        - image: ghcr.io/eazyautodelete/conversation-generators:1.0.6
+        - image: ghcr.io/eazyautodelete/conversation-generators:1.0.9
           name: conversation-generators
           imagePullPolicy: IfNotPresent
           resources:
@@ -40,6 +40,8 @@ spec:
               value: "697150699489722418"
             - name: REST_PROXY_ADDRESS
               value: "nirn-proxy.nirn-proxy.svc.cluster.local:8080"
+            - name: CHANNEL_COUNT
+              value: "14"
             - name: CHANNEL_ID_0
               value: "1091690641634902076"
             - name: CHANNEL_ID_1
@@ -60,6 +62,14 @@ spec:
               value: "1353460558640451666"
             - name: CHANNEL_ID_9
               value: "1188860172110676078"
+            - name: CHANNEL_ID_10
+              value: "1363236508122878216"
+            - name: CHANNEL_ID_11
+              value: "1353148008404877312"
+            - name: CHANNEL_ID_12
+              value: "1352689845952184473"
+            - name: CHANNEL_ID_13
+              value: "1353515903337238653"
             - name: AI_TOKEN
               valueFrom:
                 secretKeyRef:
