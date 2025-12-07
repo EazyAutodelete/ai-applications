@@ -6,8 +6,9 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 
-	"github.com/EazyAutodelete/bot/lib/config"
+	libConfig "github.com/EazyAutodelete/bot/lib/config"
 	"github.com/EazyAutodelete/bot/lib/logger"
 	"google.golang.org/genai"
 )
@@ -47,7 +48,12 @@ func GenerateWithGoogle(ctx context.Context, messages []Message) string {
 
 	config := &genai.GenerateContentConfig{}
 
-	resp, err := client.Models.GenerateContent(ctx, "gemini-2.5-flash-lite", contents, config)
+	resp, err := client.Models.GenerateContent(
+		ctx,
+		libConfig.EnvGet("MODEL", "gemma-3-27b-it"),
+		contents,
+		config,
+	)
 	if err != nil {
 		logger.GetLogger().Error("Error generating content with Google Gemini: %v", err)
 		return loremIpsum.Sentence()
@@ -58,7 +64,7 @@ func GenerateWithGoogle(ctx context.Context, messages []Message) string {
 		str += part.Text
 	}
 
-	return str
+	return strings.Trim(str, " \n")
 }
 
 func GenerateWithOllama(ctx context.Context, messages []Message) string {
@@ -72,7 +78,7 @@ func GenerateWithOllama(ctx context.Context, messages []Message) string {
 	}{
 		Messages: messages,
 		Stream:   false,
-		Model:    config.EnvMustGet("MODEL"),
+		Model:    libConfig.EnvMustGet("MODEL"),
 	}
 
 	client := &http.Client{}
@@ -125,7 +131,7 @@ func GenerateWithOllama(ctx context.Context, messages []Message) string {
 			textResponse = textResponse[:len(textResponse)-1]
 		}
 
-		for _, name := range config.GetArrayValue("NAMES") {
+		for _, name := range libConfig.GetArrayValue("NAMES") {
 			if len(textResponse) > len(name) && textResponse[:(len(name)+2)] == (name+": ") {
 				textResponse = textResponse[(len(name) + 2):]
 				break

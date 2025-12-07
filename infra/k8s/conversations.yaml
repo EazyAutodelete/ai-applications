@@ -21,7 +21,7 @@ spec:
       imagePullSecrets:
         - name: ghcr-secret
       containers:
-        - image: ghcr.io/eazyautodelete/conversation-generators:1.0.5
+        - image: ghcr.io/eazyautodelete/conversation-generators:1.0.6
           name: conversation-generators
           imagePullPolicy: IfNotPresent
           resources:
@@ -34,6 +34,8 @@ spec:
           env:
             - name: GOMEMLIMIT
               value: 128MiB
+            - name: MODEL
+              value: "gemma-3-27b-it"
             - name: STAFF_ROLE
               value: "697150699489722418"
             - name: REST_PROXY_ADDRESS
@@ -49,7 +51,7 @@ spec:
             - name: CHANNEL_ID_4
               value: "1353515863998726144"
             - name: CHANNEL_ID_5
-              value: "1353148008404877312"
+              value: "1353458792737538099"
             - name: CHANNEL_ID_6
               value: "1353142972518105088"
             - name: CHANNEL_ID_7
